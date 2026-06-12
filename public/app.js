@@ -5,7 +5,10 @@ const state = {
   documentMode: 'generated',
   activeEnvelope: null,
   history: loadHistory(),
-  poller: null
+  poller: null,
+  webhookInbox: { summary: {}, deliveries: [] },
+  lastReplayKey: null,
+  inboxPoller: null
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -30,6 +33,9 @@ const els = {
   openSigningTab: $('#openSigningTab'),
   pdfFile: $('#pdfFile'),
   refreshButton: $('#refreshButton'),
+  refreshWebhooks: $('#refreshWebhooks'),
+  replayDuplicateWebhook: $('#replayDuplicateWebhook'),
+  replayWebhook: $('#replayWebhook'),
   signButton: $('#signButton'),
   signerEmail: $('#signerEmail'),
   signerName: $('#signerName'),
@@ -37,7 +43,11 @@ const els = {
   signingFrame: $('#signingFrame'),
   statusBadge: $('#statusBadge'),
   timeline: $('#timeline'),
-  toast: $('#toast')
+  toast: $('#toast'),
+  webhookDuplicates: $('#webhookDuplicates'),
+  webhookList: $('#webhookList'),
+  webhookTotal: $('#webhookTotal'),
+  webhookVerified: $('#webhookVerified')
 };
 
 function loadHistory() {
@@ -92,6 +102,12 @@ async function api(path, options = {}) {
 function statusClass(status = '') {
   const normalized = status.toLowerCase();
   if (['completed', 'declined', 'voided', 'delivered', 'sent'].includes(normalized)) return normalized;
+  return '';
+}
+
+function deliveryClass(delivery = {}) {
+  if (delivery.duplicate) return 'warning';
+  if (delivery.status) return statusClass(delivery.status);
   return '';
 }
 
@@ -199,6 +215,53 @@ function renderHistory() {
   `).join('');
 }
 
+function signatureLabel(delivery) {
+  if (delivery.signature?.verified) return 'HMAC verified';
+  if (delivery.signature?.skipped) return 'HMAC skipped';
+  return 'HMAC unavailable';
+}
+
+function renderWebhookInbox() {
+  const summary = state.webhookInbox.summary || {};
+  const deliveries = state.webhookInbox.deliveries || [];
+
+  els.webhookTotal.textContent = summary.totalDeliveries || 0;
+  els.webhookDuplicates.textContent = summary.duplicateDeliveries || 0;
+  els.webhookVerified.textContent = summary.verifiedDeliveries || 0;
+  els.replayDuplicateWebhook.disabled = !state.lastReplayKey;
+
+  if (!deliveries.length) {
+    els.webhookList.innerHTML = '<p class="history-meta">No webhook deliveries yet.</p>';
+    return;
+  }
+
+  els.webhookList.innerHTML = deliveries.map((delivery) => `
+    <article class="webhook-item">
+      <div class="webhook-main">
+        <span class="status-pill ${deliveryClass(delivery)}">${escapeHtml(delivery.duplicate ? 'duplicate' : delivery.status || 'new')}</span>
+        <div>
+          <strong>${escapeHtml(delivery.eventType || 'connect-event')}</strong>
+          <p class="history-meta">${escapeHtml(delivery.source || 'docusign-connect')} - ${escapeHtml(signatureLabel(delivery))}</p>
+        </div>
+      </div>
+      <div class="webhook-grid">
+        <div>
+          <span class="metric-label">Envelope</span>
+          <p class="mono">${escapeHtml(delivery.envelopeId || 'not available')}</p>
+        </div>
+        <div>
+          <span class="metric-label">Idempotency</span>
+          <p class="mono">${escapeHtml(delivery.idempotencyKey || 'not available')}</p>
+        </div>
+        <div>
+          <span class="metric-label">Received</span>
+          <p class="history-meta">${escapeHtml(formatDate(delivery.receivedAt))}</p>
+        </div>
+      </div>
+    </article>
+  `).join('');
+}
+
 function setDocumentMode(mode) {
   state.documentMode = mode;
   document.querySelectorAll('.mode-button').forEach((button) => {
@@ -271,6 +334,75 @@ async function refreshEnvelope(envelopeId = state.activeEnvelope?.envelopeId) {
   }
 }
 
+async function loadWebhookInbox() {
+  try {
+    state.webhookInbox = await api('/api/webhooks/events');
+    renderWebhookInbox();
+  } catch (error) {
+    showToast(error.message);
+  }
+}
+
+function applyWebhookEventToActiveEnvelope(event) {
+  if (!event?.envelopeId) return;
+  if (!state.activeEnvelope || state.activeEnvelope.envelopeId !== event.envelopeId) return;
+
+  const receivedAt = event.delivery?.receivedAt || event.eventDateTime || new Date().toISOString();
+  const localEvent = {
+    status: event.status,
+    eventType: event.eventType,
+    receivedAt
+  };
+
+  state.activeEnvelope = {
+    ...state.activeEnvelope,
+    status: event.status || state.activeEnvelope.status,
+    updatedAt: receivedAt,
+    lastWebhookAt: receivedAt,
+    events: [localEvent, ...(state.activeEnvelope.events || [])].slice(0, 6)
+  };
+
+  upsertHistory(state.activeEnvelope);
+  renderActiveEnvelope();
+}
+
+async function replayWebhook({ duplicate = false } = {}) {
+  const button = duplicate ? els.replayDuplicateWebhook : els.replayWebhook;
+  const originalText = button.textContent;
+  button.disabled = true;
+  button.textContent = duplicate ? 'Replaying...' : 'Sending...';
+
+  try {
+    const activeEnvelopeId = state.activeEnvelope?.envelopeId;
+    const body = {
+      envelopeId: activeEnvelopeId || 'demo-envelope-local',
+      status: 'completed',
+      eventType: 'envelope-completed',
+      ...(duplicate && state.lastReplayKey ? { idempotencyKey: state.lastReplayKey } : {})
+    };
+
+    const result = await api('/api/webhooks/replay', {
+      method: 'POST',
+      body: JSON.stringify(body)
+    });
+
+    state.webhookInbox = {
+      summary: result.summary,
+      deliveries: result.deliveries
+    };
+    state.lastReplayKey = result.event.idempotencyKey || state.lastReplayKey;
+    renderWebhookInbox();
+    applyWebhookEventToActiveEnvelope(result.event);
+    showToast(result.event.duplicate ? 'Duplicate webhook replay acknowledged.' : 'Sample webhook replayed.');
+  } catch (error) {
+    showToast(error.message);
+  } finally {
+    button.textContent = originalText;
+    els.replayWebhook.disabled = false;
+    els.replayDuplicateWebhook.disabled = !state.lastReplayKey;
+  }
+}
+
 async function startSigning() {
   const envelope = state.activeEnvelope;
   if (!envelope?.envelopeId) return;
@@ -333,9 +465,17 @@ function stopPolling() {
   state.poller = null;
 }
 
+function startWebhookInboxPolling() {
+  if (state.inboxPoller) clearInterval(state.inboxPoller);
+  state.inboxPoller = setInterval(loadWebhookInbox, 15000);
+}
+
 function bindEvents() {
   els.envelopeForm.addEventListener('submit', createEnvelope);
   els.refreshButton.addEventListener('click', () => refreshEnvelope());
+  els.refreshWebhooks.addEventListener('click', loadWebhookInbox);
+  els.replayWebhook.addEventListener('click', () => replayWebhook());
+  els.replayDuplicateWebhook.addEventListener('click', () => replayWebhook({ duplicate: true }));
   els.signButton.addEventListener('click', startSigning);
   els.downloadButton.addEventListener('click', downloadEnvelope);
   els.clearHistory.addEventListener('click', () => {
@@ -360,6 +500,8 @@ function bindEvents() {
 async function boot() {
   bindEvents();
   renderHistory();
+  renderWebhookInbox();
+  startWebhookInboxPolling();
 
   try {
     state.config = await api('/api/health');
@@ -367,6 +509,8 @@ async function boot() {
   } catch (error) {
     showToast(error.message);
   }
+
+  await loadWebhookInbox();
 
   const params = new URLSearchParams(window.location.search);
   const returnedEnvelopeId = params.get('envelopeId');

@@ -70,7 +70,8 @@ button:disabled {
 .topbar-actions,
 .drawer-actions,
 .action-row,
-.status-summary {
+.status-summary,
+.panel-actions {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -96,7 +97,8 @@ button:disabled {
   min-height: 470px;
 }
 
-.history-panel {
+.history-panel,
+.webhook-panel {
   grid-column: span 2;
 }
 
@@ -428,6 +430,70 @@ input:focus {
   gap: 8px;
 }
 
+.metric-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.metric-row > div {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fbfcfd;
+  padding: 12px;
+}
+
+.metric-value {
+  display: block;
+  color: var(--ink);
+  font-size: 22px;
+  font-weight: 850;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.metric-label {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.webhook-list {
+  display: grid;
+  gap: 10px;
+}
+
+.webhook-item {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fbfcfd;
+  padding: 12px;
+  display: grid;
+  gap: 12px;
+}
+
+.webhook-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.webhook-main strong {
+  overflow-wrap: anywhere;
+}
+
+.webhook-grid {
+  display: grid;
+  grid-template-columns: 0.8fr 1.4fr 0.8fr;
+  gap: 10px;
+}
+
+.webhook-grid > div {
+  min-width: 0;
+}
+
 .integration-strip {
   grid-column: span 2;
   display: grid;
@@ -513,11 +579,14 @@ iframe {
 @media (max-width: 900px) {
   .workspace,
   .history-list,
+  .metric-row,
+  .webhook-grid,
   .integration-strip {
     grid-template-columns: 1fr;
   }
 
   .history-panel,
+  .webhook-panel,
   .integration-strip {
     grid-column: span 1;
   }
@@ -544,7 +613,8 @@ iframe {
 
   .action-row,
   .topbar-actions,
-  .drawer-actions {
+  .drawer-actions,
+  .panel-actions {
     align-items: stretch;
     flex-direction: column;
     width: 100%;

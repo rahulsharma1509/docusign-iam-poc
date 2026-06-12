@@ -8,6 +8,7 @@ Fresh DocuSign portfolio project for eSignature and IAM integration work. The ap
 - Envelope creation with signer tabs anchored in the document
 - Embedded signing via recipient view URL
 - Webhook-first status tracking with a polling fallback
+- Webhook inbox with delivery trace, HMAC status, replay simulation, and duplicate detection
 - Vercel-friendly API route structure
 - Security-first API boundaries with validation, rate limiting, HMAC verification, idempotent webhook handling, and redacted logs
 - Dependency-free validation using Node 18+ built-in tooling
@@ -22,6 +23,7 @@ This POC has been upgraded from a happy-path demo into a production-style engine
 - Trusted return URL validation for embedded signing callbacks
 - DocuSign Connect HMAC verification support
 - Webhook idempotency keys to avoid duplicate side effects on retries
+- Webhook delivery inbox for debugging event type, status, source, HMAC state, and idempotency keys
 - Request IDs, security headers, safer error responses, and redacted structured logs
 - Browser-side output escaping for user-provided envelope data
 - Vercel security headers with CSP, frame controls, referrer policy, and content sniffing protection
@@ -79,7 +81,7 @@ This runs:
 
 - `npm run check:syntax` for JavaScript syntax checks
 - `npm run scan:secrets` for committed-secret detection
-- `npm test` for Node test coverage around envelope payloads, validation, rate limiting, webhook parsing, HMAC verification, and idempotency
+- `npm test` for Node test coverage around envelope payloads, validation, rate limiting, webhook parsing, replay events, HMAC verification, and idempotency
 
 ## Required Environment Variables
 
@@ -108,6 +110,8 @@ This runs:
 | `POST` | `/api/envelopes/:id/signing-url` | Create embedded signing URL |
 | `GET` | `/api/envelopes/:id/documents` | Download combined document |
 | `POST` | `/api/webhooks/docusign` | Receive DocuSign Connect events |
+| `GET` | `/api/webhooks/events` | Read webhook delivery inbox and summary |
+| `POST` | `/api/webhooks/replay` | Replay a safe sample webhook for demos and duplicate testing |
 
 ## Vercel Deployment
 
@@ -134,6 +138,7 @@ Production controls demonstrated in this repo:
 - Restrict embedded signing return URLs to the configured app origin
 - Verify DocuSign Connect HMAC signatures when a webhook secret is configured
 - Process webhook events idempotently so retries do not duplicate state changes
+- Inspect webhook deliveries separately from processed envelope events
 - Avoid storing completed documents in the demo runtime
 - Redact sensitive keys and document payloads from structured logs
 

@@ -17,6 +17,8 @@ In simple terms, it shows how a SaaS product can embed DocuSign into its own cus
 - Starts embedded signing using a recipient view URL.
 - Tracks envelope status through the DocuSign API.
 - Receives DocuSign Connect webhook events.
+- Shows a webhook inbox with delivery status, duplicate detection, HMAC state, and idempotency keys.
+- Replays safe sample webhooks so the event-driven workflow can be demoed without waiting for a real DocuSign callback.
 - Downloads the final signed document.
 - Runs locally and is structured for Vercel deployment.
 
@@ -32,6 +34,8 @@ The hardening pass adds:
 - Trusted return URL checks so embedded signing can only return to the configured app origin.
 - DocuSign Connect HMAC verification support for webhook authenticity.
 - Idempotent webhook event handling so retries do not duplicate state changes.
+- A webhook inbox that separates delivery attempts from processed envelope events.
+- A demo replay endpoint that can show both a new webhook delivery and a duplicate retry.
 - Request IDs, safer error responses, security headers, and redacted structured logs.
 - Browser-side escaping for user-provided fields shown in history and event timelines.
 - Vercel security headers, including CSP, frame rules, referrer policy, and content sniffing protection.
@@ -56,6 +60,7 @@ I can use it to explain:
 - How DocuSign integrates into SaaS workflows.
 - When to use embedded signing versus email signing.
 - Why webhooks should drive status updates instead of only polling.
+- How to inspect webhook deliveries, prove idempotency, and debug duplicate retries.
 - How JWT auth works in a server-side integration.
 - How partner platforms can trigger document workflows.
 - How to think about production concerns like token management, storage, retries, security, and observability.
@@ -74,7 +79,7 @@ It also becomes the foundation for larger portfolio projects, such as:
 
 The strongest way to present this project is:
 
-"I built a DocuSign integration POC that simulates how a SaaS platform would send agreements for signature. The backend authenticates with DocuSign using JWT, creates envelopes, launches embedded signing, listens for Connect webhook events, and lets the app download the completed document. I built it this way to show both API implementation depth and partner-facing solution architecture thinking."
+"I built a DocuSign integration POC that simulates how a SaaS platform would send agreements for signature. The backend authenticates with DocuSign using JWT, creates envelopes, launches embedded signing, listens for Connect webhook events, and lets the app download the completed document. I also added a webhook inbox and replay simulator so I can demonstrate event delivery, idempotency, HMAC status, and duplicate retry behavior without relying only on a live callback. I built it this way to show both API implementation depth and partner-facing solution architecture thinking."
 
 ## Skills Demonstrated
 
@@ -90,6 +95,7 @@ The strongest way to present this project is:
 - Input validation and API boundary design
 - HMAC webhook verification
 - Idempotent event processing
+- Webhook observability and replay simulation
 - Rate limiting and abuse-control thinking
 - Structured logging with redaction
 - Validation automation, secret scanning, and production-readiness documentation

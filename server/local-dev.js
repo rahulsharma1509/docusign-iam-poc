@@ -11,6 +11,8 @@ import envelopeSigningUrl from '../api/envelopes/[envelopeId]/signing-url.js';
 import health from '../api/health.js';
 import oauthCallback from '../api/oauth-callback.js';
 import docusignWebhook from '../api/webhooks/docusign.js';
+import webhookEvents from '../api/webhooks/events.js';
+import webhookReplay from '../api/webhooks/replay.js';
 import { sendJson } from '../api/_lib/http.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -25,6 +27,8 @@ const apiRoutes = [
   { method: 'GET', pattern: /^\/api\/envelopes\/([^/]+)$/, param: 'envelopeId', handler: envelopeStatus },
   { method: 'POST', pattern: /^\/api\/envelopes\/([^/]+)\/signing-url$/, param: 'envelopeId', handler: envelopeSigningUrl },
   { method: 'GET', pattern: /^\/api\/envelopes\/([^/]+)\/documents$/, param: 'envelopeId', handler: envelopeDocuments },
+  { method: 'GET', pattern: /^\/api\/webhooks\/events$/, handler: webhookEvents },
+  { method: 'POST', pattern: /^\/api\/webhooks\/replay$/, handler: webhookReplay },
   { method: 'POST', pattern: /^\/api\/webhooks\/docusign$/, handler: docusignWebhook }
 ];
 

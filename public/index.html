@@ -126,6 +126,39 @@
           <div id="historyList" class="history-list"></div>
         </section>
 
+        <section class="panel webhook-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Connect</p>
+              <h2>Webhook inbox</h2>
+            </div>
+            <div class="panel-actions">
+              <button id="refreshWebhooks" class="icon-button" type="button" title="Refresh webhook inbox" aria-label="Refresh webhook inbox">
+                <span aria-hidden="true">R</span>
+              </button>
+              <button id="replayWebhook" class="secondary-button" type="button">Replay sample</button>
+              <button id="replayDuplicateWebhook" class="ghost-button" type="button" disabled>Replay duplicate</button>
+            </div>
+          </div>
+
+          <div class="metric-row">
+            <div>
+              <span id="webhookTotal" class="metric-value">0</span>
+              <span class="metric-label">Deliveries</span>
+            </div>
+            <div>
+              <span id="webhookDuplicates" class="metric-value">0</span>
+              <span class="metric-label">Duplicates</span>
+            </div>
+            <div>
+              <span id="webhookVerified" class="metric-value">0</span>
+              <span class="metric-label">HMAC verified</span>
+            </div>
+          </div>
+
+          <div id="webhookList" class="webhook-list"></div>
+        </section>
+
         <section class="integration-strip">
           <div class="flow-node active">SaaS trigger</div>
           <div class="flow-node">Envelope API</div>

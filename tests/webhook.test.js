@@ -2,7 +2,14 @@ import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import test from 'node:test';
 
-import { getEnvelope, getEnvelopeEvents, recordWebhookEvent, resetStoreForTests } from '../api/_lib/store.js';
+import {
+  getEnvelope,
+  getEnvelopeEvents,
+  getWebhookDeliveries,
+  getWebhookInboxSummary,
+  recordWebhookEvent,
+  resetStoreForTests
+} from '../api/_lib/store.js';
 import { parseWebhookPayload, verifyWebhookHmac, webhookDeliveryId } from '../api/_lib/webhook.js';
 
 test('verifyWebhookHmac accepts valid DocuSign HMAC signatures', () => {
@@ -84,6 +91,9 @@ test('recordWebhookEvent is idempotent for duplicate event keys', () => {
   assert.equal(second.id, first.id);
   assert.equal(second.duplicate, true);
   assert.equal(getEnvelopeEvents('env-dup').length, 1);
+  assert.equal(getWebhookDeliveries().length, 2);
+  assert.equal(getWebhookDeliveries()[0].duplicate, true);
+  assert.equal(getWebhookInboxSummary().duplicateDeliveries, 1);
   assert.equal(getEnvelope('env-dup').status, 'completed');
 });
 

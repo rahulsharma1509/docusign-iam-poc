@@ -21,6 +21,7 @@ This document captures the engineering review posture for the DocuSign IAM Integ
 | Embedded signing | Return URL restricted to configured app origin | `api/envelopes/[envelopeId]/signing-url.js` |
 | Webhook authenticity | Optional DocuSign Connect HMAC verification | `api/_lib/webhook.js` |
 | Webhook idempotency | Duplicate delivery keys return the original event | `api/_lib/store.js` |
+| Webhook observability | Delivery inbox separates attempts from processed events | `api/webhooks/events.js`, `api/webhooks/replay.js` |
 | Observability | Request IDs and redacted structured logs | `api/_lib/http.js`, `api/_lib/logger.js` |
 | Browser safety | Escapes user-provided values before rendering | `public/app.js` |
 | Deployment headers | CSP, frame rules, content sniffing, referrer, permissions | `vercel.json` |
@@ -49,6 +50,7 @@ Mitigations:
 - HMAC verification is supported when `DOCUSIGN_WEBHOOK_SECRET` is set.
 - Delivery headers or parsed event metadata become an idempotency key.
 - Duplicate events return the existing event and do not update envelope state again.
+- The webhook inbox records delivery attempts so duplicate retries are visible during demos and debugging.
 
 Production next step:
 
@@ -106,6 +108,7 @@ Before a real partner pilot, complete these checks:
 - Create one real envelope and complete embedded signing.
 - Confirm webhook event status updates the local state.
 - Confirm duplicate webhook delivery does not duplicate event history.
+- Use the replay simulator to demonstrate a new delivery and then a duplicate delivery with the same idempotency key.
 - Confirm completed document download works only after envelope completion.
 
 ## Production Gaps
@@ -125,4 +128,4 @@ These are intentionally left out of the lightweight POC:
 
 Use this language when presenting the hardening pass:
 
-"I started with a working DocuSign eSignature POC, then treated it like a production-readiness review. I added API validation, request limits, route-level rate limiting, HMAC webhook verification, idempotency, trusted embedded-signing callbacks, browser escaping, deployment security headers, redacted structured logs, and repeatable validation automation. The result is still lightweight enough for a portfolio demo, but it shows the engineering judgment needed to guide an ISV partner from prototype to safe implementation."
+"I started with a working DocuSign eSignature POC, then treated it like a production-readiness review. I added API validation, request limits, route-level rate limiting, HMAC webhook verification, idempotency, a webhook inbox with replay simulation, trusted embedded-signing callbacks, browser escaping, deployment security headers, redacted structured logs, and repeatable validation automation. The result is still lightweight enough for a portfolio demo, but it shows the engineering judgment needed to guide an ISV partner from prototype to safe implementation."
