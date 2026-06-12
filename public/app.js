@@ -59,6 +59,15 @@ function showToast(message) {
   showToast.timer = setTimeout(() => els.toast.classList.add('hidden'), 4200);
 }
 
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 async function api(path, options = {}) {
   const response = await fetch(path, {
     ...options,
@@ -162,8 +171,8 @@ function renderActiveEnvelope() {
 
   els.timeline.innerHTML = events.slice(0, 6).map((event) => `
     <li>
-      <span>${event.eventType || 'status'}: ${event.status || 'event-received'}</span>
-      <time>${formatDate(event.receivedAt)}</time>
+      <span>${escapeHtml(event.eventType || 'status')}: ${escapeHtml(event.status || 'event-received')}</span>
+      <time>${escapeHtml(formatDate(event.receivedAt))}</time>
     </li>
   `).join('');
 }
@@ -177,14 +186,14 @@ function renderHistory() {
   els.historyList.innerHTML = state.history.map((item) => `
     <article class="history-item">
       <div>
-        <strong>${item.dealName || item.documentName || 'Envelope'}</strong>
-        <p class="history-meta">${item.signerName || 'Signer'} - ${item.signerEmail || 'email not available'}</p>
+        <strong>${escapeHtml(item.dealName || item.documentName || 'Envelope')}</strong>
+        <p class="history-meta">${escapeHtml(item.signerName || 'Signer')} - ${escapeHtml(item.signerEmail || 'email not available')}</p>
       </div>
-      <span class="status-pill ${statusClass(item.status)}">${item.status || 'sent'}</span>
-      <p class="history-meta mono">${item.envelopeId}</p>
+      <span class="status-pill ${statusClass(item.status)}">${escapeHtml(item.status || 'sent')}</span>
+      <p class="history-meta mono">${escapeHtml(item.envelopeId)}</p>
       <div class="history-actions">
-        <button class="ghost-button" type="button" data-load-envelope="${item.envelopeId}">Load</button>
-        <button class="ghost-button" type="button" data-refresh-envelope="${item.envelopeId}">Refresh</button>
+        <button class="ghost-button" type="button" data-load-envelope="${escapeHtml(item.envelopeId)}">Load</button>
+        <button class="ghost-button" type="button" data-refresh-envelope="${escapeHtml(item.envelopeId)}">Refresh</button>
       </div>
     </article>
   `).join('');

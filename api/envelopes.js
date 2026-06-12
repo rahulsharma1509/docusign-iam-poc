@@ -1,28 +1,17 @@
 import { getConfig } from './_lib/config.js';
 import { createEnvelope } from './_lib/docusign.js';
 import { handleOptions, methodNotAllowed, readJson, sendError, sendJson } from './_lib/http.js';
+import { enforceRateLimit } from './_lib/rateLimit.js';
 import { saveEnvelope } from './_lib/store.js';
-
-function validateEnvelopeInput(body) {
-  const missing = [];
-  if (!body.signerName) missing.push('signerName');
-  if (!body.signerEmail) missing.push('signerEmail');
-
-  if (missing.length) {
-    const error = new Error('Missing required envelope fields.');
-    error.statusCode = 400;
-    error.details = { missing };
-    throw error;
-  }
-}
+import { validateEnvelopeInput } from './_lib/validation.js';
 
 export default async function handler(req, res) {
   if (handleOptions(req, res)) return;
   if (req.method !== 'POST') return methodNotAllowed(res, ['POST']);
 
   try {
-    const body = await readJson(req);
-    validateEnvelopeInput(body);
+    enforceRateLimit(req, { keyPrefix: 'create-envelope', limit: 10, windowMs: 60_000 });
+    const body = validateEnvelopeInput(await readJson(req));
 
     const config = getConfig(req);
     const result = await createEnvelope(config, body);
@@ -30,7 +19,7 @@ export default async function handler(req, res) {
       ...result,
       signerName: body.signerName,
       signerEmail: body.signerEmail,
-      dealName: body.dealName || 'DocuSign POC Agreement',
+      dealName: body.dealName,
       embeddedSigning: body.embeddedSigning !== false,
       createdAt: new Date().toISOString()
     });

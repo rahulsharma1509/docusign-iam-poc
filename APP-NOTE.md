@@ -20,11 +20,32 @@ In simple terms, it shows how a SaaS product can embed DocuSign into its own cus
 - Downloads the final signed document.
 - Runs locally and is structured for Vercel deployment.
 
+## Engineering Hardening Added
+
+This project has now been upgraded from a functional POC into a stronger production-style demo. The goal is to show that I can think like both an integration engineer and an engineering manager reviewing risk before a partner-facing launch.
+
+The hardening pass adds:
+
+- Server-side input validation for signer details, email format, file names, PDF uploads, and request shape.
+- Request body size limits so large uploads cannot overload the API route.
+- Best-effort rate limiting on envelope creation and embedded signing URL generation.
+- Trusted return URL checks so embedded signing can only return to the configured app origin.
+- DocuSign Connect HMAC verification support for webhook authenticity.
+- Idempotent webhook event handling so retries do not duplicate state changes.
+- Request IDs, safer error responses, security headers, and redacted structured logs.
+- Browser-side escaping for user-provided fields shown in history and event timelines.
+- Vercel security headers, including CSP, frame rules, referrer policy, and content sniffing protection.
+- CI-ready validation scripts with syntax checks, secret scanning, and automated tests.
+
+This makes the app easier to present as a serious integration artifact. It is still intentionally lightweight, but it now demonstrates the production questions a partner solutions architect should ask before telling an ISV that an integration pattern is ready.
+
 ## Why This Matters
 
 This project directly maps to the kind of work expected from a DocuSign Partner Solutions Architect or ISV-focused pre-sales engineer.
 
 It proves that I can understand a partner's product workflow, identify where DocuSign fits, and turn that into a working technical integration. It is not just a UI demo. It includes the core backend patterns needed for a real integration: authentication, REST API calls, envelope creation, embedded signing, webhook handling, and document retrieval.
+
+The newer engineering layer makes the project stronger because it also shows operational judgment: how to validate inputs, protect credentials, avoid webhook replay side effects, reason about browser security, and create repeatable validation checks. That is the difference between "I can call an API" and "I can help a partner design something they can safely run."
 
 ## How This Helps Me
 
@@ -38,6 +59,9 @@ I can use it to explain:
 - How JWT auth works in a server-side integration.
 - How partner platforms can trigger document workflows.
 - How to think about production concerns like token management, storage, retries, security, and observability.
+- How to explain the security posture of an embedded agreement workflow.
+- How to review a webhook-first integration for idempotency and replay safety.
+- How to convert a POC into an engineering artifact that can survive review by security, platform, and partner engineering teams.
 
 It also becomes the foundation for larger portfolio projects, such as:
 
@@ -63,6 +87,12 @@ The strongest way to present this project is:
 - SaaS integration patterns
 - Partner enablement thinking
 - Vercel-ready full-stack app structure
+- Input validation and API boundary design
+- HMAC webhook verification
+- Idempotent event processing
+- Rate limiting and abuse-control thinking
+- Structured logging with redaction
+- Validation automation, secret scanning, and production-readiness documentation
 
 ## Next Steps
 
@@ -81,9 +111,10 @@ The next steps I will do later are:
    - verify status update
    - download the signed PDF
 4. Test webhook delivery using a public tunnel or deployed Vercel URL.
-5. Enable HMAC validation for DocuSign Connect webhook security.
+5. Enable HMAC validation in the DocuSign Connect configuration and set `DOCUSIGN_WEBHOOK_SECRET`.
 6. Deploy the app to Vercel.
 7. Add the live Vercel URL and screenshots to the README.
 8. Add persistent storage for envelopes and webhook events.
-9. Connect this app with the second project, `docusign-saas-bridge`, so a SaaS/n8n/Salesforce trigger can create a DocuSign envelope automatically.
-10. Convert the docs into a partner-facing workshop deck.
+9. Replace best-effort in-memory rate limiting with a managed gateway or durable rate-limit store.
+10. Connect this app with the second project, `docusign-saas-bridge`, so a SaaS/n8n/Salesforce trigger can create a DocuSign envelope automatically.
+11. Convert the docs into a partner-facing workshop deck.
