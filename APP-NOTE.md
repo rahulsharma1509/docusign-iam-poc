@@ -66,10 +66,24 @@ The strongest way to present this project is:
 
 ## Next Steps
 
-The next useful improvements are:
+The project is already pushed to GitHub:
 
-- Add persistent storage for envelopes and webhook events.
-- Add an n8n or Salesforce trigger that creates an envelope automatically.
-- Add HMAC validation for production webhook security.
-- Add a partner-facing workshop deck using this app as the lab.
-- Deploy the app to Vercel and add screenshots to the README.
+https://github.com/rahulsharma1509/docusign-iam-poc
+
+The next steps I will do later are:
+
+1. Add real DocuSign developer credentials to the local `.env` file.
+2. Complete DocuSign JWT consent for the integration user.
+3. Run one real end-to-end signing test:
+   - create envelope
+   - open embedded signing
+   - complete signing
+   - verify status update
+   - download the signed PDF
+4. Test webhook delivery using a public tunnel or deployed Vercel URL.
+5. Enable HMAC validation for DocuSign Connect webhook security.
+6. Deploy the app to Vercel.
+7. Add the live Vercel URL and screenshots to the README.
+8. Add persistent storage for envelopes and webhook events.
+9. Connect this app with the second project, `docusign-saas-bridge`, so a SaaS/n8n/Salesforce trigger can create a DocuSign envelope automatically.
+10. Convert the docs into a partner-facing workshop deck.
