@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocuSign IAM POC</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Partner integration lab</p>
+          <h1>DocuSign IAM POC</h1>
+        </div>
+        <div class="topbar-actions">
+          <a id="consentLink" class="ghost-link" href="#" target="_blank" rel="noreferrer">Consent</a>
+          <span id="configBadge" class="status-pill muted">Checking config</span>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <section class="panel compose-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Envelope</p>
+              <h2>Create request</h2>
+            </div>
+          </div>
+
+          <form id="envelopeForm" class="form-grid">
+            <label>
+              <span>Deal name</span>
+              <input id="dealName" name="dealName" type="text" value="Acme renewal agreement" autocomplete="off">
+            </label>
+            <label>
+              <span>Signer name</span>
+              <input id="signerName" name="signerName" type="text" placeholder="Alex Morgan" required>
+            </label>
+            <label>
+              <span>Signer email</span>
+              <input id="signerEmail" name="signerEmail" type="email" placeholder="alex@example.com" required>
+            </label>
+
+            <div class="mode-row" role="group" aria-label="Document mode">
+              <button class="mode-button active" type="button" data-mode="generated">Generated PDF</button>
+              <button class="mode-button" type="button" data-mode="upload">Upload PDF</button>
+            </div>
+
+            <label id="fileField" class="file-field hidden">
+              <span>PDF with /sn1/ and /date1/ anchors</span>
+              <input id="pdfFile" name="pdfFile" type="file" accept="application/pdf">
+            </label>
+
+            <label class="toggle-row">
+              <input id="embeddedSigning" type="checkbox" checked>
+              <span>Embedded signing</span>
+            </label>
+
+            <button id="createButton" class="primary-button" type="submit">
+              Create envelope
+            </button>
+          </form>
+
+          <div id="configPanel" class="notice hidden"></div>
+        </section>
+
+        <section class="panel status-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Status</p>
+              <h2>Active envelope</h2>
+            </div>
+            <button id="refreshButton" class="icon-button" type="button" title="Refresh status" aria-label="Refresh status">
+              <span aria-hidden="true">R</span>
+            </button>
+          </div>
+
+          <div id="emptyState" class="empty-state">
+            <div class="doc-preview">
+              <div class="doc-line wide"></div>
+              <div class="doc-line"></div>
+              <div class="doc-line short"></div>
+              <div class="signature-line"></div>
+            </div>
+          </div>
+
+          <div id="activeEnvelope" class="active-envelope hidden">
+            <div class="status-summary">
+              <span id="statusBadge" class="status-pill">sent</span>
+              <span id="envelopeId" class="mono"></span>
+            </div>
+            <dl class="details-list">
+              <div>
+                <dt>Signer</dt>
+                <dd id="activeSigner"></dd>
+              </div>
+              <div>
+                <dt>Document</dt>
+                <dd id="activeDocument"></dd>
+              </div>
+              <div>
+                <dt>Updated</dt>
+                <dd id="activeUpdated"></dd>
+              </div>
+            </dl>
+
+            <div class="action-row">
+              <button id="signButton" class="primary-button" type="button">Focused signing</button>
+              <button id="downloadButton" class="secondary-button" type="button">Download PDF</button>
+            </div>
+
+            <ol id="timeline" class="timeline"></ol>
+          </div>
+        </section>
+
+        <section class="panel history-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Trace</p>
+              <h2>History and events</h2>
+            </div>
+            <button id="clearHistory" class="ghost-button" type="button">Clear</button>
+          </div>
+
+          <div id="historyList" class="history-list"></div>
+        </section>
+
+        <section class="integration-strip">
+          <div class="flow-node active">SaaS trigger</div>
+          <div class="flow-node">Envelope API</div>
+          <div class="flow-node">Focused view</div>
+          <div class="flow-node">Connect webhook</div>
+          <div class="flow-node">System update</div>
+        </section>
+      </main>
+    </div>
+
+    <div id="toast" class="toast hidden" role="status"></div>
+
+    <div id="signingDrawer" class="drawer hidden" aria-hidden="true">
+      <div class="drawer-scrim" data-close-drawer></div>
+      <section class="drawer-panel" aria-label="Embedded signing session">
+        <header class="drawer-header">
+          <div>
+            <p class="eyebrow">Recipient view</p>
+            <h2>Focused signing</h2>
+          </div>
+          <div class="drawer-actions">
+            <a id="openSigningTab" class="ghost-link" href="#" target="_blank" rel="noreferrer">Open tab</a>
+            <button class="icon-button" type="button" data-close-drawer aria-label="Close signing drawer">X</button>
+          </div>
+        </header>
+        <iframe id="signingFrame" title="DocuSign signing view"></iframe>
+      </section>
+    </div>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>

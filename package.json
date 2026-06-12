@@ -1,0 +1,14 @@
+{
+  "name": "docusign-iam-poc",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "DocuSign eSignature and IAM integration POC with embedded signing, webhook tracking, and Vercel API routes.",
+  "scripts": {
+    "dev": "node server/local-dev.js",
+    "start": "node server/local-dev.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
